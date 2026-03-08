@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Merchant Risk Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f4f4;
+margin:0;
+padding:40px;
+}
+
+.container{
+background:white;
+padding:30px;
+border-radius:10px;
+max-width:1200px;
+margin:auto;
+}
+
+.input-box{
+margin-bottom:20px;
+}
+
+.input-box input{
+padding:10px;
+width:350px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+.input-box button{
+padding:10px 20px;
+margin-left:10px;
+background:#2ecc71;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+margin-top:20px;
+}
+
+.card{
+background:#f2f2f2;
+padding:20px;
+border-radius:8px;
+}
+
+.progress{
+width:100%;
+height:20px;
+background:#ddd;
+border-radius:10px;
+margin-top:10px;
+}
+
+.progress-bar{
+height:100%;
+background:#2ecc71;
+border-radius:10px;
+transition:width 0.5s;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #ddd;
+text-align:left;
+}
+
+.risk-box{
+margin-top:15px;
+padding:15px;
+border-left:5px solid orange;
+background:#f8f8f8;
+border-radius:6px;
+}
+
+.low{color:#2ecc71;font-weight:bold;}
+.medium{color:#f39c12;font-weight:bold;}
+.high{color:#e74c3c;font-weight:bold;}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Merchant Risk Report</h1>
+
+<div class="input-box">
+<input 
+id="urlInput"
+placeholder="Enter website URL (e.g. https://example.com)"
+>
+<button onclick="scanWebsite()">Analyze</button>
+</div>
+
+<div class="progress">
+<div id="progressBar" class="progress-bar"></div>
+</div>
+
+<div class="cards">
+
+<div class="card"><h3>Trust Score</h3><p id="trustScore">0</p></div>
+<div class="card"><h3>Website</h3><p id="websiteUrl">-</p></div>
+<div class="card"><h3>Total Risk Score</h3><p id="riskScore">0</p></div>
+<div class="card"><h3>Risk Level</h3><p id="riskLevel">-</p></div>
+
+<div class="card"><h3>Email Detected</h3><p id="emailCount">0</p></div>
+<div class="card"><h3>Phone Numbers</h3><p id="phoneCount">0</p></div>
+<div class="card"><h3>Total Links</h3><p id="linkCount">0</p></div>
+<div class="card"><h3>External Links</h3><p id="externalLinks">0</p></div>
+
+<div class="card"><h3>Login Forms</h3><p id="loginForms">0</p></div>
+<div class="card"><h3>Payment Signals</h3><p id="paymentSignals">0</p></div>
+<div class="card"><h3>Suspicious Keywords</h3><p id="suspiciousSignals">0</p></div>
+<div class="card"><h3>Hidden Elements</h3><p id="hiddenElements">0</p></div>
+
+<div class="card"><h3>Iframes</h3><p id="iframes">0</p></div>
+<div class="card"><h3>Domain Age (days)</h3><p id="domainAge">-</p></div>
+<div class="card"><h3>Suspicious TLD</h3><p id="tldFlag">No</p></div>
+
+</div>
+
+
+<h2>Final Assessment</h2>
+<div id="recommendationBox" class="risk-box">
+Run analysis to see recommendation
+</div>
+
+
+<h2>Risk Breakdown</h2>
+<canvas id="riskChart" height="120"></canvas>
+
+
+<h2>Fraud Signals Detected</h2>
+
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Severity</th>
+<th>Category</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody id="fraudTable"></tbody>
+</table>
+
+
+<h2>Detected Risk Signals</h2>
+<div id="riskSignals"></div>
+
+</div>
+
+<script>
+
+let chartInstance=null;
+
+async function scanWebsite(){
+
+const url=document.getElementById("urlInput").value;
+
+if(!url){
+alert("Please enter a website URL");
+return;
+}
+
+try{
+
+const response=await fetch("/analyze",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({url})
+});
+
+const data=await response.json();
+
+displayResults(data);
+
+}catch(err){
+
+console.error(err);
+alert("Analysis failed");
+
+}
+
+}
+
+
+function displayResults(data){
+
+document.getElementById("trustScore").innerText=data.trustScore||0;
+document.getElementById("riskScore").innerText=data.riskScore||0;
+
+const level=data.riskLevel||"-";
+const levelElement=document.getElementById("riskLevel");
+
+levelElement.innerText=level;
+
+levelElement.className="";
+
+if(level.includes("Low"))levelElement.className="low";
+if(level.includes("Medium"))levelElement.className="medium";
+if(level.includes("High"))levelElement.className="high";
+
+
+document.getElementById("websiteUrl").innerHTML=
+`<a href="${data.url}" target="_blank">${data.url}</a>`;
+
+
+document.getElementById("emailCount").innerText=data.emails?.length||0;
+document.getElementById("phoneCount").innerText=data.phones?.length||0;
+document.getElementById("linkCount").innerText=data.totalLinks||0;
+document.getElementById("externalLinks").innerText=data.externalLinks||0;
+
+document.getElementById("loginForms").innerText=data.loginForms||0;
+document.getElementById("paymentSignals").innerText=data.paymentSignals||0;
+document.getElementById("suspiciousSignals").innerText=data.suspiciousSignals||0;
+document.getElementById("hiddenElements").innerText=data.hiddenElements||0;
+document.getElementById("iframes").innerText=data.iframeCount||0;
+
+document.getElementById("domainAge").innerText=data.domainAgeDays||"-";
+document.getElementById("tldFlag").innerText=data.suspiciousTLD?"Yes":"No";
+
+document.getElementById("progressBar").style.width=(data.trustScore||0)+"%";
+
+
+/* FINAL RECOMMENDATION */
+
+const box=document.getElementById("recommendationBox");
+
+let text="";
+let color="#2ecc71";
+
+if(data.riskScore>=10){
+
+text="🚨 HIGH RISK — Merchant shows strong fraud indicators. Immediate investigation recommended.";
+color="#e74c3c";
+
+}
+else if(data.riskScore>=5){
+
+text="⚠ REVIEW REQUIRED — Suspicious signals detected. Manual verification recommended.";
+color="#f39c12";
+
+}
+else{
+
+text="✅ SAFE MERCHANT — Low fraud indicators detected. Merchant appears legitimate.";
+
+}
+
+box.innerText=text;
+box.style.borderLeft="5px solid "+color;
+
+
+/* FRAUD TABLE */
+
+const table=document.getElementById("fraudTable");
+table.innerHTML="";
+
+if(data.rules){
+
+data.rules.forEach(rule=>{
+
+table.innerHTML+=`
+<tr>
+<td>${rule.rule}</td>
+<td>${rule.severity}</td>
+<td>${rule.category||"-"}</td>
+<td>${rule.reason||"-"}</td>
+</tr>
+`;
+
+});
+
+}
+
+
+/* RISK SIGNAL BOXES */
+
+const boxSignals=document.getElementById("riskSignals");
+boxSignals.innerHTML="";
+
+if(data.rules){
+
+data.rules.forEach(rule=>{
+
+boxSignals.innerHTML+=`
+<div class="risk-box">
+<b>${rule.rule}</b>
+<br>
+Severity: ${rule.severity}
+<br>
+Category: ${rule.category||"-"}
+<br>
+Reason: ${rule.reason||"-"}
+</div>
+`;
+
+});
+
+}
+
+
+/* CHART */
+
+const rules=data.rules||[];
+
+const high=rules.filter(r=>r.severity==="High").length;
+const medium=rules.filter(r=>r.severity==="Medium").length;
+const low=rules.filter(r=>r.severity==="Low").length;
+
+if(chartInstance){
+chartInstance.destroy();
+}
+
+const ctx=document.getElementById("riskChart");
+
+chartInstance=new Chart(ctx,{
+type:"bar",
+data:{
+labels:["High Risk","Medium Risk","Low Risk"],
+datasets:[{
+label:"Risk Signals",
+data:[high,medium,low],
+backgroundColor:["#e74c3c","#f39c12","#2ecc71"]
+}]
+}
+});
+
+}
+
+</script>
+
+</body>
+</html>
+
