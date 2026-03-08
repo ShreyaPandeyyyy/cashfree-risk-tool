@@ -59,6 +59,7 @@ The goal is to quickly assess whether a website might be safe, suspicious, or po
 
 ## Project Structure
 
+``` txt
 cashfree-risk-tool
 │
 ├── crawler.js # Crawls website and extracts data
@@ -73,6 +74,7 @@ cashfree-risk-tool
 │
 ├── package.json
 └── README.md
+```
 
 ## How It Works
 
