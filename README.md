@@ -3,6 +3,9 @@
 A lightweight Website Risk Analysis Tool that crawls a website and evaluates potential trust or security risks.
 It extracts useful signals (emails, phones, links, policies, etc.) and computes a risk score and trust score to help identify suspicious websites.
 
+[Live Demo](https://cashfree-risk-tool.onrender.com/dashboard.html) | 
+[GitHub Repository](https://github.com/ShreyaPandeyyyy/cashfree-risk-tool)
+
 ## Live Demo
 
 Dashboard:
@@ -123,7 +126,7 @@ Response includes
 - emails
 - phones
 - totalLinks
-- rules triggered
+- rules
 - riskScore
 - trustScore
 - riskLevel
@@ -154,3 +157,12 @@ https://cashfree-risk-tool.onrender.com/dashboard.html
 - Malware blacklist checks
 - More advanced scoring model
 - Better UI visualization
+
+## Author
+
+Shreya Pandey  
+B.E. Electronics & Communication Engineering  
+BMS College of Engineering
+
+GitHub: https://github.com/ShreyaPandeyyyy  
+LinkedIn: https://www.linkedin.com/in/shreya-pandey-bb9b71272/
